@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model VpnProduct {
+  id                     String            @id @default(uuid())
+  name                   String
+  subdomain_slug         String            @unique
+  short_description      String?
+  long_description       String?
+  logo_url               String?
+  favicon_url            String?
+  primary_color          String?
+  secondary_color        String?
+  font_family            String?
+  play_store_url         String?
+  app_store_url          String?
+  app_rating             Float?
+  download_count_display String?
+  show_play_badge        Boolean           @default(true)
+  show_app_badge         Boolean           @default(true)
+  meta_title             String?
+  meta_description       String?
+  status                 String            @default("draft") // "draft" or "published"
+  display_order          Int               @default(0)
+  tags                   String?           // JSON stringified array of tag strings
+  created_at             DateTime          @default(now())
+  updated_at             DateTime          @updatedAt
+
+  features               VpnFeature[]
+  pricing_plans          VpnPricingPlan[]
+  legal                  VpnLegal?
+}
+
+model VpnFeature {
+  id             String     @id @default(uuid())
+  vpn_product_id String
+  vpn_product    VpnProduct @relation(fields: [vpn_product_id], references: [id], onDelete: Cascade)
+  icon_name      String?
+  title          String?
+  description    String?
+  display_order  Int?
+}
+
+model VpnPricingPlan {
+  id             String     @id @default(uuid())
+  vpn_product_id String
+  vpn_product    VpnProduct @relation(fields: [vpn_product_id], references: [id], onDelete: Cascade)
+  plan_name      String?
+  monthly_price  Float?
+  yearly_price   Float?
+  currency       String?
+  features_list  String?    // JSON stringified array of feature strings
+  cta_label      String?    @default("Get Started")
+  cta_url        String?
+  is_featured    Boolean    @default(false)
+  display_order  Int?
+}
+
+model VpnLegal {
+  id                  String     @id @default(uuid())
+  vpn_product_id      String     @unique
+  vpn_product         VpnProduct @relation(fields: [vpn_product_id], references: [id], onDelete: Cascade)
+  privacy_policy_html String?
+  terms_html          String?
+  effective_date      DateTime?
+  contact_email       String?
+  updated_at          DateTime   @updatedAt
+}
+
+model SiteConfig {
+  key        String   @id
+  value      String   // JSON stringified value
+  updated_at DateTime @updatedAt
+  updated_by String?
+}
+
+model AnalyticsEvent {
+  id             Int      @id @default(autoincrement())
+  event_type     String
+  vpn_product_id String?
+  page_url       String?
+  referrer       String?
+  user_agent     String?
+  ip_hash        String?
+  country_code   String?
+  created_at     DateTime @default(now())
+}
